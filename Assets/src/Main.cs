@@ -4,67 +4,81 @@ using System.Collections.Generic;
 using src;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Assertions.Comparers;
 
 public class Main : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer backgroundSpriteRenderer;
     [SerializeField] private Circle circlePrefab;
-    private Circle _circle;
-    private Sprite _backgroundSprite;
     private Camera _mainCamera;
     private Texture2D _texture;
     private Vector2Int _textureRes;
-
+    private float _prevAspect;
+    private Vector3 _defaultTextureSize;
     private void InitBackground()
     {
-        var height = _mainCamera.pixelHeight;
-        var width = _mainCamera.pixelWidth;
 
-        backgroundSpriteRenderer.transform.localScale = new Vector3(
-                width * 2/(float)_textureRes.x,
-                height * 2/(float)_textureRes.y
-                );
-        
         _texture = new Texture2D(_textureRes.x, _textureRes.y);
         var sprite = Sprite.Create(_texture, new Rect(0, 0, _textureRes.x, _textureRes.y), Vector2.zero);
 
         backgroundSpriteRenderer.sprite = sprite;
         backgroundSpriteRenderer.transform.position = _mainCamera.ScreenToWorldPoint(new Vector3(0,0,50));
+        
+        _defaultTextureSize = backgroundSpriteRenderer.bounds.size;
+        UpdateTextureSize();
     }
 
+    private Vector2 CameraSize()
+    {
+        var cameraHeight = 2 * _mainCamera.orthographicSize;
+        var cameraWidth = cameraHeight * _mainCamera.aspect;
+        
+        return new Vector2(cameraWidth, cameraHeight);
+    }
+    
+    private void UpdateTextureSize()
+    {
+        var size = CameraSize();
+
+        float scaller;
+        if (size.x < size.y)
+            scaller = size.x / _defaultTextureSize.x;
+        else
+            scaller = size.y / _defaultTextureSize.y;
+
+        backgroundSpriteRenderer.transform.localScale = new Vector3(scaller, scaller);
+        
+        backgroundSpriteRenderer.transform.position = _mainCamera.ScreenToWorldPoint(new Vector3(0,0,50));
+    }
     private void Start()
     {
-        _textureRes.x = 1280;
-        _textureRes.y = 720;
-        
+        _textureRes.x = 1280/2;
+        _textureRes.y = 720/2;
+
+
         _mainCamera = Camera.main;
         InitBackground();
-        
-        _circle = Instantiate(circlePrefab);
-        _circle.Create(0.5f);
-        
-        var pos = _mainCamera.WorldToScreenPoint(_circle.transform.position);
-        pos = ScreenToTexturePoint(pos);
-        
-        for (var y = 0; y < _texture.height; y++)
-        for (var x = 0; x < _texture.width; x++) 
-        {
-            var val = ComputeColor(x, y, pos);
-            Color pixelColor = new Color(val, val, val, 1);
-            _texture.SetPixel(x, y, pixelColor);
-        }
 
+        _prevAspect = _mainCamera.aspect;
+        
         _texture.Apply();
     }
 
     private float ComputeColor(int x, int y, Vector2 center)
     {
         var distance = Vector2.Distance(new Vector2(x, y), center);
-        return 1 - Mathf.Clamp01(distance / 1000);
+        return distance;
     }
 
+    private List<Circle> _circles = new List<Circle>();
     private void Update()
     {
+        if (!FloatComparer.AreEqualRelative(_prevAspect, _mainCamera.aspect, 0.0001f))
+        {
+            UpdateTextureSize();
+            _prevAspect = _mainCamera.aspect;
+        }
+        
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             var pz = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -73,14 +87,24 @@ public class Main : MonoBehaviour
             var circle = Instantiate(circlePrefab);
             circle.transform.position = pz;
             circle.Create(0.1f);
+            _circles.Add(circle);
             
-            var pos = ScreenToTexturePoint(Input.mousePosition);
-
+            var pos = WorldToTexturePoint(_mainCamera.ScreenToWorldPoint(Input.mousePosition));
+            circle.TexturePosition = pos;
+            
             for (var y = 0; y < _texture.height; y++)
-            for (var x = 0; x < _texture.width; x++) 
+            for (var x = 0; x < _texture.width; x++)
             {
-                var val = ComputeColor(x, y, pos);
-                var pixelColor = new Color(val, val, val, 1);
+                var sum = 0f;
+                foreach (var c in _circles)
+                {
+                    var val = ComputeColor(x, y, c.TexturePosition);
+                    val = c.Radius / val;
+                    sum += val;
+                }
+
+                sum *= 100;
+                var pixelColor = new Color(sum, sum, sum, 1);
                 _texture.SetPixel(x, y, pixelColor);
             }
 
@@ -92,15 +116,30 @@ public class Main : MonoBehaviour
 
     private void TestInput()
     {
-        var pos = ScreenToTexturePoint(Input.mousePosition);
-        
+        var pos = WorldToTexturePoint(_mainCamera.ScreenToWorldPoint(Input.mousePosition));
         _texture.SetPixel((int)pos.x, (int)pos.y, Color.red);
         _texture.Apply();
     }
 
     private Vector3 ScreenToTexturePoint(Vector3 pos)
     {
+        throw new Exception("Doesn't work with not default aspect");
         var scaller = new Vector2(_mainCamera.pixelWidth/(float)_textureRes.x, _mainCamera.pixelHeight/(float)_textureRes.y);
         return new Vector3(pos.x / scaller.x, pos.y/scaller.y);
+    }
+
+    private Vector3 WorldToTexturePoint(Vector3 pos)
+    {
+        var bounds = backgroundSpriteRenderer.bounds;
+        var textureX = bounds.size.x;
+        var textureY = bounds.size.y;
+
+        var camSize = CameraSize();
+        
+        // x          - (pos+shift)
+        // resolution - texsize
+        var relation = new Vector2(_textureRes.x/textureX, _textureRes.y/textureY);
+        var camPosition = _mainCamera.transform.position;
+        return new Vector3((pos.x + camSize.x/2 - camPosition.x)* relation.x, (pos.y+camSize.y/2- camPosition.y)*relation.y);
     }
 }

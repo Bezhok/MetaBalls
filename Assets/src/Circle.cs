@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace src
@@ -6,8 +7,11 @@ namespace src
     public class Circle : MonoBehaviour
     {
         private Mesh _mesh;
-        public Color FillColor { get; set; }
 
+        public float Radius { get; set; }
+
+        public Color FillColor { get; set; }
+        public Vector3 TexturePosition { get; set; }
         private void Awake()
         {
             _mesh = GetComponent<MeshFilter>().mesh;
@@ -16,6 +20,8 @@ namespace src
 
         public void Create(float radius, int quality = 40)
         {
+            Radius = radius;
+            
             var center = Vector2.zero;
             var stepCount = (int)(quality * Mathf.Max(1, radius));
             
@@ -48,7 +54,6 @@ namespace src
 
                 eboIdx += eboTemplate.Length;
             }
-            
             
             for (var i = 0; i < colors.Length; i++) colors[i] = FillColor;
 
