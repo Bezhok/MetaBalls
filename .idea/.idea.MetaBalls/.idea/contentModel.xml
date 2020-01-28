@@ -18,6 +18,7 @@
           </e>
         </e>
         <e p="src" t="Include">
+          <e p="Circle.cs" t="Include" />
           <e p="Main.cs" t="Include" />
         </e>
       </e>
