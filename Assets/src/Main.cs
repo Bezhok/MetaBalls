@@ -15,6 +15,7 @@ public class Main : MonoBehaviour
     private Vector2Int _textureRes;
     private float _prevAspect;
     private Vector3 _defaultTextureSize;
+    Color32[] colors32;
     private void InitBackground()
     {
 
@@ -26,6 +27,8 @@ public class Main : MonoBehaviour
         
         _defaultTextureSize = backgroundSpriteRenderer.bounds.size;
         UpdateTextureSize();
+        
+        colors32 = new Color32[_texture.width*_texture.height];
     }
 
     private Vector2 CameraSize()
@@ -52,8 +55,8 @@ public class Main : MonoBehaviour
     }
     private void Start()
     {
-        _textureRes.x = 1280/2;
-        _textureRes.y = 720/2;
+        _textureRes.x = 1280/4;
+        _textureRes.y = 720/4;
 
 
         _mainCamera = Camera.main;
@@ -67,6 +70,7 @@ public class Main : MonoBehaviour
     private float ComputeColor(int x, int y, Vector2 center)
     {
         var distance = Vector2.Distance(new Vector2(x, y), center);
+//        Mathf.Abs(x-center.x)+Mathf.Abs(y-center.y);
         return distance;
     }
 
@@ -86,11 +90,13 @@ public class Main : MonoBehaviour
 
             var circle = Instantiate(circlePrefab);
             circle.transform.position = pz;
-            circle.Create(0.1f);
+            circle.Radius = 0.1f;
+//            circle.Create(0.1f);
             _circles.Add(circle);
             
             var pos = WorldToTexturePoint(_mainCamera.ScreenToWorldPoint(Input.mousePosition));
             circle.TexturePosition = pos;
+            
             
             for (var y = 0; y < _texture.height; y++)
             for (var x = 0; x < _texture.width; x++)
@@ -103,15 +109,15 @@ public class Main : MonoBehaviour
                     sum += val;
                 }
 
-                sum *= 100;
-                var pixelColor = new Color(sum, sum, sum, 1);
-                _texture.SetPixel(x, y, pixelColor);
+                sum *= 1000*10;
+                if (sum > 255) sum = 255;
+                byte sumb = (byte) sum;
+                colors32[x + y * _texture.width] = new Color32(sumb,sumb,sumb, 255);
             }
-
+            
+            _texture.SetPixels32(colors32);
             _texture.Apply();
         }
-
-        TestInput();
     }
 
     private void TestInput()
