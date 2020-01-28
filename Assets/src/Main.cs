@@ -14,98 +14,93 @@ public class Main : MonoBehaviour
     private Camera _mainCamera;
     private Texture2D _texture;
     private Vector2Int _textureRes;
-    void Start()
+
+    private void InitBackground()
+    {
+        var height = _mainCamera.pixelHeight;
+        var width = _mainCamera.pixelWidth;
+
+        backgroundSpriteRenderer.transform.localScale = new Vector3(
+                width * 2/(float)_textureRes.x,
+                height * 2/(float)_textureRes.y
+                );
+        
+        _texture = new Texture2D(_textureRes.x, _textureRes.y);
+        var sprite = Sprite.Create(_texture, new Rect(0, 0, _textureRes.x, _textureRes.y), Vector2.zero);
+
+        backgroundSpriteRenderer.sprite = sprite;
+        backgroundSpriteRenderer.transform.position = _mainCamera.ScreenToWorldPoint(new Vector3(0,0,50));
+    }
+
+    private void Start()
     {
         _textureRes.x = 1280;
         _textureRes.y = 720;
         
+        _mainCamera = Camera.main;
+        InitBackground();
+        
         _circle = Instantiate(circlePrefab);
         _circle.Create(0.5f);
-
-        _mainCamera = Camera.main;
-
-        int cameraPixelHeight = _mainCamera.pixelHeight * 2;
-        int cameraPixelWidth = _mainCamera.pixelWidth * 2;
-
-        backgroundSpriteRenderer.transform.localScale = new Vector3(cameraPixelWidth/(float)_textureRes.x, cameraPixelHeight/(float)_textureRes.y);
-        _texture = new Texture2D(_textureRes.x, _textureRes.y);
-        Sprite sprite = Sprite.Create(_texture, new Rect(0, 0, _textureRes.x, _textureRes.y), Vector2.zero);
-
-        backgroundSpriteRenderer.sprite = sprite;
-        backgroundSpriteRenderer.transform.position = _mainCamera.ScreenToWorldPoint(new Vector3(0,0,50));
         
-        var scaller = new Vector3(_mainCamera.pixelWidth/(float)_textureRes.x, _mainCamera.pixelHeight/(float)_textureRes.y);
         var pos = _mainCamera.WorldToScreenPoint(_circle.transform.position);
-        pos = new Vector3(pos.x / scaller.x, pos.y/scaller.y);
+        pos = ScreenToTexturePoint(pos);
         
-        for (int y = 0; y < _texture.height; y++)
+        for (var y = 0; y < _texture.height; y++)
+        for (var x = 0; x < _texture.width; x++) 
         {
-            for (int x = 0; x < _texture.width; x++) 
-            {
-                Color pixelColor;
-
-                var val = ComputeColor(x, y, pos);
-                pixelColor = new Color(val, val, val, 1);
-                    _texture.SetPixel(x, y, pixelColor);
-            }
+            var val = ComputeColor(x, y, pos);
+            Color pixelColor = new Color(val, val, val, 1);
+            _texture.SetPixel(x, y, pixelColor);
         }
 
         _texture.Apply();
     }
 
-    float ComputeColor(int x, int y, Vector2 center)
+    private float ComputeColor(int x, int y, Vector2 center)
     {
-        float distance = Vector2.Distance(new Vector2(x, y), center);
+        var distance = Vector2.Distance(new Vector2(x, y), center);
         return 1 - Mathf.Clamp01(distance / 1000);
     }
-    
-    void Update()
+
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            Vector3 pz = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            var pz = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             pz.z = 0;
 
             var circle = Instantiate(circlePrefab);
             circle.transform.position = pz;
             circle.Create(0.1f);
             
+            var pos = ScreenToTexturePoint(Input.mousePosition);
 
-            var scaller = new Vector3(_mainCamera.pixelWidth/(float)_textureRes.x, _mainCamera.pixelHeight/(float)_textureRes.y);
-            var pos = Input.mousePosition;
-            pos = new Vector3(pos.x / scaller.x, pos.y/scaller.y);
-
-            
-            for (int y = 0; y < _texture.height; y++)
+            for (var y = 0; y < _texture.height; y++)
+            for (var x = 0; x < _texture.width; x++) 
             {
-                for (int x = 0; x < _texture.width; x++) 
-                {
-                    var val = ComputeColor(x, y, pos);
-                    Color pixelColor = new Color(val, val, val, 1);
-                    _texture.SetPixel(x, y, pixelColor);
-                }
+                var val = ComputeColor(x, y, pos);
+                var pixelColor = new Color(val, val, val, 1);
+                _texture.SetPixel(x, y, pixelColor);
             }
 
             _texture.Apply();
         }
 
-        testInput();
+        TestInput();
     }
 
-    void testInput()
+    private void TestInput()
     {
-        var scaller = new Vector3(_mainCamera.pixelWidth/(float)_textureRes.x, _mainCamera.pixelHeight/(float)_textureRes.y);
-        var pos = Input.mousePosition;
-        pos = new Vector3(pos.x / scaller.x, pos.y / scaller.y);
-
-        _texture.SetPixel((int)pos.x, (int) pos.y, Color.red);
+        var pos = ScreenToTexturePoint(Input.mousePosition);
+        
+        _texture.SetPixel((int)pos.x, (int)pos.y, Color.red);
         _texture.Apply();
     }
 
-    Vector3 ScreenToTexturePoint(Vector3 pos)
+    private Vector3 ScreenToTexturePoint(Vector3 pos)
     {
-        var scaller = new Vector3(_mainCamera.pixelWidth/(float)_textureRes.x, _mainCamera.pixelHeight/(float)_textureRes.y);
+        var scaller = new Vector2(_mainCamera.pixelWidth/(float)_textureRes.x, _mainCamera.pixelHeight/(float)_textureRes.y);
         return new Vector3(pos.x / scaller.x, pos.y/scaller.y);
     }
-
 }

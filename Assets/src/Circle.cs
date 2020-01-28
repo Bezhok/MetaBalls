@@ -16,19 +16,19 @@ namespace src
 
         public void Create(float radius, int quality = 40)
         {
-            Vector2 center = Vector2.zero;
-            int stepCount = (int)(quality * Mathf.Max(1, radius));
+            var center = Vector2.zero;
+            var stepCount = (int)(quality * Mathf.Max(1, radius));
             
-            Color[] colors = new Color[4*(stepCount+1)];
-            Vector3[] vertices = new Vector3[4*(stepCount+1)];
+            var colors = new Color[4*(stepCount+1)];
+            var vertices = new Vector3[4*(stepCount+1)];
             int[] eboTemplate = {0, 1, 2, 1, 3, 2};
-            int[] ebo = new int[eboTemplate.Length * (stepCount+1)];
+            var ebo = new int[eboTemplate.Length * (stepCount+1)];
             
             
-            float step = 2*Mathf.PI / stepCount;
+            var step = 2*Mathf.PI / stepCount;
 
             float angle = 0;
-            int eboIdx = 0;
+            var eboIdx = 0;
             for (int i = 0, vertIdx = 0; i <= stepCount; i+=2, vertIdx += 4, angle = i*step)
             {
                 var vecF = CalcPoint(i*step, radius);
@@ -44,19 +44,13 @@ namespace src
                 //  \  |  /
                 //   \ | /
                 //    2C
-                for (int k = 0; k < eboTemplate.Length; k++)
-                {
-                    ebo[eboIdx+ k] = vertIdx + eboTemplate[k];
-                }
+                for (var k = 0; k < eboTemplate.Length; k++) ebo[eboIdx+ k] = vertIdx + eboTemplate[k];
 
                 eboIdx += eboTemplate.Length;
             }
             
             
-            for (int i = 0; i < colors.Length; i++)
-            {
-                colors[i] = FillColor;
-            }
+            for (var i = 0; i < colors.Length; i++) colors[i] = FillColor;
 
             _mesh.vertices = vertices;
             _mesh.triangles = ebo;
@@ -65,8 +59,8 @@ namespace src
 
         private Vector2 CalcPoint(float angle, float radius)
         {
-            float x = radius * Mathf.Cos(angle);
-            float y = radius * Mathf.Sin(angle);
+            var x = radius * Mathf.Cos(angle);
+            var y = radius * Mathf.Sin(angle);
             return new Vector2(x, y);
         }
     }
