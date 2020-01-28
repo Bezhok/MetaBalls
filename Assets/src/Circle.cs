@@ -8,6 +8,8 @@ namespace src
     {
         private Mesh _mesh;
 
+        public Vector3 speed;
+        
         public float Radius { get; set; }
 
         public Color FillColor { get; set; }

@@ -5,6 +5,7 @@ using src;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions.Comparers;
+using Random = UnityEngine.Random;
 
 public class Main : MonoBehaviour
 {
@@ -55,8 +56,8 @@ public class Main : MonoBehaviour
     }
     private void Start()
     {
-        _textureRes.x = 1280/4;
-        _textureRes.y = 720/4;
+        _textureRes.x = 1280/8;
+        _textureRes.y = 720/8;
 
 
         _mainCamera = Camera.main;
@@ -65,6 +66,14 @@ public class Main : MonoBehaviour
         _prevAspect = _mainCamera.aspect;
         
         _texture.Apply();
+
+        var camSize = CameraSize();
+        for (int i = 0; i < 6; i++)
+        {
+            _circles.Add(Instantiate(circlePrefab));
+            _circles[i].Radius = Random.Range(0.08f, 0.3f);
+            _circles[i].speed = new Vector2(Random.Range(0f, camSize.x/4), Random.Range(0f, camSize.x/4));
+        }
     }
 
     private float ComputeColor(int x, int y, Vector2 center)
@@ -81,6 +90,49 @@ public class Main : MonoBehaviour
         {
             UpdateTextureSize();
             _prevAspect = _mainCamera.aspect;
+        }
+        
+        
+        for (var y = 0; y < _texture.height; y++)
+        for (var x = 0; x < _texture.width; x++)
+        {
+            var sum = 0f;
+            foreach (var c in _circles)
+            {
+                var val = ComputeColor(x, y, c.TexturePosition);
+                val = c.Radius / val;
+                sum += val;
+            }
+
+            sum *= 1000*6;
+            if (sum > 255) sum = 255;
+            byte sumb = (byte) sum;
+            colors32[x + y * _texture.width] = new Color32(sumb,sumb,sumb, 255);
+        }
+            
+        _texture.SetPixels32(colors32);
+        _texture.Apply();
+
+        var bottomLeft = _mainCamera.ScreenToWorldPoint(new Vector3(0,0,50));
+        var upperRight = _mainCamera.ScreenToWorldPoint(new Vector3(_mainCamera.pixelWidth,_mainCamera.pixelHeight,50));
+        
+        
+        foreach (var circle in _circles)
+        {
+            var circlePos = circle.transform.position;
+            if (circlePos.x > upperRight.x || circlePos.x < bottomLeft.x)
+            {
+                circle.speed.x *= -1;
+            }
+            
+            if (circlePos.y > upperRight.y || circlePos.y < bottomLeft.y)
+            {
+                circle.speed.y *= -1;
+            }
+
+            circlePos += Time.deltaTime * circle.speed;
+            circle.transform.position = circlePos;
+            circle.TexturePosition = WorldToTexturePoint(circlePos);
         }
         
         if (Input.GetKeyDown(KeyCode.Mouse0))
