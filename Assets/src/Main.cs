@@ -19,7 +19,7 @@ namespace src
         private void InitBackground()
         {
             _texture = new Texture2D(_textureRes.x, _textureRes.y);
-            var sprite = Sprite.Create(_texture, new Rect(0, 0, _textureRes.x, _textureRes.y), Vector2.zero);
+            Sprite sprite = Sprite.Create(_texture, new Rect(0, 0, _textureRes.x, _textureRes.y), Vector2.zero);
 
             backgroundSpriteRenderer.sprite = sprite;
             backgroundSpriteRenderer.transform.position = _mainCamera.ScreenToWorldPoint(new Vector3(0, 0, 50));
@@ -32,15 +32,15 @@ namespace src
 
         private Vector2 CameraSize()
         {
-            var cameraHeight = 2 * _mainCamera.orthographicSize;
-            var cameraWidth = cameraHeight * _mainCamera.aspect;
+            float cameraHeight = 2 * _mainCamera.orthographicSize;
+            float cameraWidth = cameraHeight * _mainCamera.aspect;
 
             return new Vector2(cameraWidth, cameraHeight);
         }
 
         private void UpdateTextureSize()
         {
-            var size = CameraSize();
+            Vector2 size = CameraSize();
 
             float scale;
             if (size.x < size.y)
@@ -71,8 +71,8 @@ namespace src
 
         private void GenerateCircles()
         {
-            var camSize = CameraSize();
-            for (var i = 0; i < 6; i++)
+            Vector2 camSize = CameraSize();
+            for (int i = 0; i < 6; i++)
             {
                 _circles.Add(Instantiate(circlePrefab));
                 _circles[i].Radius = Random.Range(0.08f, 0.3f);
@@ -82,7 +82,7 @@ namespace src
 
         private float ComputeColor(int x, int y, Vector2 center)
         {
-            var distance = Vector2.Distance(new Vector2(x, y), center);
+            float distance = Vector2.Distance(new Vector2(x, y), center);
             return distance;
         }
 
@@ -103,19 +103,19 @@ namespace src
         private void UpdateTexture()
         {
             for (int y = 0, i = 0; y < _texture.height; y++)
-            for (var x = 0; x < _texture.width; x++, i++)
+            for (int x = 0; x < _texture.width; x++, i++)
             {
-                var sum = 0f;
-                foreach (var c in _circles)
+                float sum = 0f;
+                foreach (Circle c in _circles)
                 {
-                    var val = ComputeColor(x, y, c.TexturePosition);
+                    float val = ComputeColor(x, y, c.TexturePosition);
                     val = c.Radius / val;
                     sum += val;
                 }
 
                 sum *= 6000;
                 if (sum > 255) sum = 255;
-                var sumB = (byte) sum;
+                byte sumB = (byte) sum;
                 _colors32[i] = new Color32(sumB, sumB, sumB, 255);
             }
 
@@ -127,20 +127,20 @@ namespace src
         {
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                var pos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 pos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 CreateStaticCircle(pos);
             }
         }
 
         private void UpdateCirclePositions()
         {
-            var bottomLeft = _mainCamera.ScreenToWorldPoint(new Vector3(0, 0, 50));
-            var upperRight =
+            Vector3 bottomLeft = _mainCamera.ScreenToWorldPoint(new Vector3(0, 0, 50));
+            Vector3 upperRight =
                 _mainCamera.ScreenToWorldPoint(new Vector3(_mainCamera.pixelWidth, _mainCamera.pixelHeight, 50));
 
-            foreach (var circle in _circles)
+            foreach (Circle circle in _circles)
             {
-                var circlePos = circle.transform.position;
+                Vector3 circlePos = circle.transform.position;
                 if (circlePos.x > upperRight.x || circlePos.x < bottomLeft.x) circle.speed.x *= -1;
 
                 if (circlePos.y > upperRight.y || circlePos.y < bottomLeft.y) circle.speed.y *= -1;
@@ -155,27 +155,27 @@ namespace src
         {
             globalPosition.z = 0;
 
-            var circle = Instantiate(circlePrefab);
+            Circle circle = Instantiate(circlePrefab);
             circle.transform.position = globalPosition;
             circle.Radius = 0.1f;
             _circles.Add(circle);
 
-            var pos = WorldToTexturePoint(globalPosition);
+            Vector3 pos = WorldToTexturePoint(globalPosition);
             circle.TexturePosition = pos;
         }
 
         private Vector3 WorldToTexturePoint(Vector3 pos)
         {
-            var bounds = backgroundSpriteRenderer.bounds;
-            var textureX = bounds.size.x;
-            var textureY = bounds.size.y;
+            Bounds bounds = backgroundSpriteRenderer.bounds;
+            float textureX = bounds.size.x;
+            float textureY = bounds.size.y;
 
-            var camSize = CameraSize();
+            Vector2 camSize = CameraSize();
 
             // x          - (pos+shift)
             // resolution - texture size
             var relation = new Vector2(_textureRes.x / textureX, _textureRes.y / textureY);
-            var camPosition = _mainCamera.transform.position;
+            Vector3 camPosition = _mainCamera.transform.position;
             return new Vector3((pos.x + camSize.x / 2 - camPosition.x) * relation.x,
                 (pos.y + camSize.y / 2 - camPosition.y) * relation.y);
         }
