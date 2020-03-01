@@ -165,8 +165,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   backgroundSpriteRenderer: {fileID: 2056421023}
-  circlePrefab: {fileID: 6046057997263771975, guid: d767179de2649da4e82314b4bfb0bede,
-    type: 3}
+  circlePrefab: {fileID: 682215449}
 --- !u!1001 &122620491
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -174,11 +173,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 8904387814202832817, guid: d767179de2649da4e82314b4bfb0bede,
-        type: 3}
-      propertyPath: m_Name
-      value: Circle
-      objectReference: {fileID: 0}
     - target: {fileID: 3365830468003834362, guid: d767179de2649da4e82314b4bfb0bede,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -233,6 +227,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8904387814202832817, guid: d767179de2649da4e82314b4bfb0bede,
+        type: 3}
+      propertyPath: m_Name
+      value: Circle
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d767179de2649da4e82314b4bfb0bede, type: 3}
@@ -319,6 +318,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &682215449 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6046057997263771975, guid: d767179de2649da4e82314b4bfb0bede,
+    type: 3}
+  m_PrefabInstance: {fileID: 122620491}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b98e26a3dd7c4ec8982576efa1d77a50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2056421022
 GameObject:
   m_ObjectHideFlags: 0

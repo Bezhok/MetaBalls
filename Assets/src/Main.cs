@@ -125,7 +125,11 @@ namespace src
 
         private void ProcessInput()
         {
-            if (Input.GetKeyDown(KeyCode.Mouse0)) CreateStaticCircle();
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                var pos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                CreateStaticCircle(pos);
+            }
         }
 
         private void UpdateCirclePositions()
@@ -147,17 +151,16 @@ namespace src
             }
         }
 
-        private void CreateStaticCircle()
+        private void CreateStaticCircle(Vector3 globalPosition)
         {
-            var pz = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            pz.z = 0;
+            globalPosition.z = 0;
 
             var circle = Instantiate(circlePrefab);
-            circle.transform.position = pz;
+            circle.transform.position = globalPosition;
             circle.Radius = 0.1f;
             _circles.Add(circle);
 
-            var pos = WorldToTexturePoint(_mainCamera.ScreenToWorldPoint(Input.mousePosition));
+            var pos = WorldToTexturePoint(globalPosition);
             circle.TexturePosition = pos;
         }
 
